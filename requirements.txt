@@ -1,0 +1,6 @@
+Flask
+Flask-SQLAlchemy
+qrcode[pil]
+getmac
+pandas
+openpyxl

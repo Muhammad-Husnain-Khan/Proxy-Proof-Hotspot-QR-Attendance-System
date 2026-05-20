@@ -1,0 +1,181 @@
+# SYSTEM REQUIREMENTS SPECIFICATION (SRS) & ARCHITECTURE BLUEPRINT
+**Project Name:** Proxy-Proof Local Hotspot Attendance System
+**Target Executor:** AI Coding Agent
+**Objective:** Develop a robust, local-network-based attendance system utilizing two-factor proximity authentication (Local Wi-Fi Hotspot + Dynamic 30-second expiring QR Codes) to completely eliminate proxy attendance.
+
+---
+
+## 1. TECH STACK & DEPENDENCIES
+- **Backend:** Python 3.10+, Flask
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript (No heavy frameworks required)
+- **Database:** MySQL / MSSQL (via SQLAlchemy ORM for database agnosticism)
+- **Libraries:** 
+  - `Flask`, `Flask-SQLAlchemy` (Routing and DB Management)
+  - `qrcode[pil]` (Dynamic QR Generation)
+  - `netifaces` or `socket` (Local IP resolution)
+  - `getmac` (For MAC address resolution on the local network)
+
+---
+
+## 2. DIRECTORY STRUCTURE
+Agent must enforce the following MVC-style structure:
+```text
+attendance_system/
+├── app.py                  # Application factory and entry point
+├── config.py               # Environment variables and DB URI strings
+├── extensions.py           # SQLAlchemy instance initialization
+├── models.py               # Database schemas
+├── routes.py               # API endpoints and view functions
+├── utils.py                # Helper functions (IP fetch, QR gen, MAC fetch)
+├── static/                 
+│   ├── css/style.css       
+│   └── js/timer.js         
+└── templates/              
+    ├── teacher.html        # Projector view (QR code & Session management)
+    ├── student.html        # Client view (Email submission)
+    └── success.html        # Confirmation page
+3. DATABASE SCHEMA (SQLAlchemy Models)
+Implement the following relational tables using standard Software Design and Architecture (SDA) normalization principles:
+
+Table: Student
+
+id (Integer, Primary Key)
+
+email (String, Unique, Non-Nullable) -> Must validate against university domain.
+
+name (String, Non-Nullable)
+
+mac_address_history (String, Nullable) -> To track associated devices.
+
+Table: Session
+
+id (Integer, Primary Key)
+
+course_name (String, Non-Nullable)
+
+start_time (DateTime, Default: Current UTC)
+
+is_active (Boolean, Default: True)
+
+Table: AttendanceRecord
+
+id (Integer, Primary Key)
+
+session_id (Integer, Foreign Key -> Session.id)
+
+student_id (Integer, Foreign Key -> Student.id)
+
+timestamp (DateTime, Default: Current UTC)
+
+device_mac (String, Non-Nullable) -> Logs the MAC address used at the time of scanning.
+
+4. CORE SYSTEM LOGIC & ALGORITHMS
+4.1 Token Generation & Expiration (The Security Core)
+The system must maintain a server-side state of the current_token.
+
+Constraint: Tokens must be cryptographically secure (secrets.token_hex).
+
+Constraint: Token validity duration is strictly 30 seconds.
+
+Constraint: When a new token is generated, the previous token instantly invalidates.
+
+4.2 Local Network Enforcement
+The Flask server must bind to 0.0.0.0 to accept external local connections.
+
+The system must dynamically resolve the host machine's Local Network IP. Note: On Windows laptops, the Mobile Hotspot typically uses a virtual adapter with a default gateway of 192.168.137.1. The system should prioritize this interface. 127.0.0.1 must not be embedded in the QR.
+
+4.3 Anti-Proxy Heuristics
+MAC Logging: The route handling the POST request for attendance must capture the client's MAC address using the ARP table (via the getmac library) based on the request.remote_addr.
+
+Constraint: If a single MAC address attempts to mark attendance for more than one distinct student_id within the same session_id, flag the entry as SUSPICIOUS_PROXY and reject the second attempt.
+
+5. API ENDPOINTS & ROUTES
+1. GET / (Teacher Dashboard)
+
+Role: UI for the teacher to start a session and display the QR code.
+
+Action: Triggers generate_new_token() on load. Embeds JS to auto-refresh the QR image source every 30 seconds without reloading the whole page.
+
+2. GET /api/qrcode
+
+Role: Serves the actual .png stream of the QR code.
+
+Payload: http://<LOCAL_IP>:<PORT>/mark?token=<CURRENT_TOKEN>
+
+Response: mimetype='image/png'
+
+3. GET /mark (Student Portal)
+
+Role: The landing page from the QR scan.
+
+Validation: Checks request.args.get('token'). If invalid or expired, return 403 Forbidden with a clear "Token Expired, Scan Again" message.
+
+4. POST /mark (Form Submission)
+
+Payload: JSON or Form Data { "email": "student@domain.edu", "token": "<token>" }
+
+Execution Flow:
+
+Validate token.
+
+Resolve Client IP to MAC address.
+
+Check MAC against current session records (Anti-Proxy check).
+
+Query DB for student email.
+
+Insert AttendanceRecord.
+
+Response: 200 OK (Render success.html) or 400/403 Error for proxy detection.
+
+6. IMPLEMENTATION PHASES FOR AGENT
+Phase 1: Scaffolding & Configuration
+
+Initialize the Flask app with the defined directory structure.
+
+Configure SQLAlchemy to use a local SQLite file for immediate testing (ensure connection strings can be easily swapped to MSSQL/MySQL for production).
+
+Phase 2: Core Utilities
+
+Implement IP resolution function.
+
+Implement the QR generation function storing to io.BytesIO().
+
+Implement the MAC address resolution utility.
+
+Phase 3: Routing & Logic
+
+Build the API endpoints ensuring token validation logic is perfectly synchronized with the 30-second window.
+
+Phase 4: Frontend Integration
+
+Create the teacher.html using AJAX/Fetch to update the <img> src every 30 seconds smoothly to prevent screen flashing.
+
+Create the responsive student.html form.
+
+Phase 5: Edge Case Handling
+
+Add a captive portal bypass instruction for phones that report "No Internet Connection" when joining the hotspot. Provide a clear UI message on student.html saying: "Ensure you remain connected to the local Wi-Fi to submit."
+
+END OF SPECIFICATION
+
+---
+
+## 7. USER WORKFLOW
+
+### 7.1 Teacher Workflow (Host)
+1. **Initialize Network:** The teacher turns on the "Mobile Hotspot" feature on their Windows laptop.
+2. **Launch System:** The teacher runs the Flask application.
+3. **Access Dashboard:** Open the browser to `http://localhost:5000/`.
+4. **Start Session:** Enter the **Course Name** and click "Start Session".
+5. **Display QR:** The projector displays a dynamic QR code that automatically regenerates every 30 seconds to prevent unauthorized sharing.
+6. **Monitor:** (Optional) The teacher can see the attendance count update as students submit.
+
+### 7.2 Student Workflow (Client)
+1. **Connect:** The student connects their device to the teacher's local Wi-Fi hotspot.
+2. **Scan:** The student scans the QR code displayed on the projector using their phone's camera or a QR scanner app.
+3. **Access Portal:** The scan redirects the student to the local server's landing page (e.g., `http://192.168.137.1:5000/mark?token=xyz`).
+4. **Proximity Validation:** The system automatically checks if the student is on the correct local network and if the token is still valid (within the 30s window).
+5. **Identify:** The student enters their registered university email address in the form.
+6. **Submit:** Upon clicking "Submit", the system captures the device's MAC address and cross-references it with the session to ensure no double-marking (Proxy Protection).
+7. **Confirmation:** The student receives a "Success" message once their attendance is recorded in the database.

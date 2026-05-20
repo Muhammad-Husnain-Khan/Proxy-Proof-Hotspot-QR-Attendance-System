@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ProxAttend Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+      scrollbar-width: thin;
+      scrollbar-color: #334155 #0f172a;
+    }
+
+    /* Custom Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 10px;
+      border: 3px solid #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    body {
+      background: #0f172a;
+      overflow: hidden;
+      height: 100vh
+    }
+
+    #sidebar {
+      width: 240px;
+      background: #111827;
+      border-right: 1px solid rgba(255, 255, 255, .06);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      transition: width .3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-x: hidden;
+    }
+
+    #sidebar.collapsed {
+      width: 64px;
+    }
+
+    #sidebar.collapsed .sidebar-header {
+      justify-content: center;
+      gap: 0 !important;
+    }
+
+    .nav-label,
+    .brand-name {
+      transition: opacity .2s ease, transform .2s ease, width .2s ease, margin .2s ease;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    #sidebar.collapsed .nav-label,
+    #sidebar.collapsed .brand-name {
+      opacity: 0;
+      width: 0;
+      margin: 0 !important;
+      pointer-events: none;
+      transform: translateX(-10px);
+    }
+
+    #sidebar.collapsed .nav-btn {
+      justify-content: center;
+      padding: .65rem 0;
+      gap: 0;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .65rem .85rem;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: .875rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all .2s
+    }
+
+    .nav-btn:hover {
+      background: rgba(99, 102, 241, .08);
+      color: #e2e8f0
+    }
+
+    .nav-btn.active {
+      background: rgba(99, 102, 241, .15);
+      color: #818cf8;
+      border-color: rgba(99, 102, 241, .25)
+    }
+
+    .nav-btn i {
+      font-size: 1.05rem;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .module {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden
+    }
+
+    .module.active {
+      display: flex
+    }
+
+    .topbar {
+      background: #111827;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      padding: .85rem 1.5rem;
+      flex-shrink: 0
+    }
+
+    .card-dark {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 14px
+    }
+
+    .att-wrap {
+      overflow: auto;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 12px;
+      flex: 1;
+      background: #111827
+    }
+
+    .att-table {
+      min-width: max-content;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .82rem;
+      white-space: nowrap
+    }
+
+    .att-table th {
+      position: sticky;
+      top: 0;
+      background: #1e293b;
+      color: #64748b;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .65rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      z-index: 10;
+      min-width: 100px
+    }
+
+    .att-table th:not(.sc):not(.sc2) {
+      min-width: 80px
+    }
+
+    .att-table th.sc0 {
+      position: sticky;
+      left: 0;
+      z-index: 11;
+      background: #1e293b;
+      border-right: 1px solid rgba(255, 255, 255, .04);
+      min-width: 50px
+    }
+
+    .att-table th.sc {
+      position: sticky;
+      left: 50px;
+      z-index: 11;
+      background: #1e293b;
+      border-right: 1px solid rgba(255, 255, 255, .04)
+    }
+
+    .att-table th.sc2 {
+      position: sticky;
+      left: 150px;
+      z-index: 11;
+      background: #1e293b;
+      border-right: 1px solid rgba(255, 255, 255, .04)
+    }
+
+    .att-table td {
+      padding: .6rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      color: #e2e8f0
+    }
+
+    .att-table td.sc0 {
+      position: sticky;
+      left: 0;
+      background: #1e293b;
+      z-index: 1;
+      min-width: 50px;
+      color: #64748b;
+      border-right: 1px solid rgba(255, 255, 255, .04)
+    }
+
+    .att-table td.sc {
+      position: sticky;
+      left: 50px;
+      background: #1e293b;
+      z-index: 1;
+      min-width: 100px;
+      font-weight: 700;
+      color: #818cf8;
+      border-right: 1px solid rgba(255, 255, 255, .04)
+    }
+
+    .att-table td.sc2 {
+      position: sticky;
+      left: 150px;
+      background: #1e293b;
+      z-index: 1;
+      min-width: 180px;
+      border-right: 1px solid rgba(255, 255, 255, .04)
+    }
+
+    .att-table tr:hover td,
+    .att-table tr:hover td.sc0,
+    .att-table tr:hover td.sc,
+    .att-table tr:hover td.sc2 {
+      background: #243044
+    }
+
+    .att-table tr:last-child td {
+      border-bottom: none
+    }
+
+    .bp {
+      display: inline-block;
+      padding: .2rem .55rem;
+      background: rgba(16, 185, 129, .15);
+      color: #34d399;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .78rem;
+      min-width: 28px;
+      text-align: center;
+      border: 1px solid rgba(16, 185, 129, .25)
+    }
+
+    .ba {
+      display: inline-block;
+      padding: .2rem .55rem;
+      background: rgba(239, 68, 68, .12);
+      color: #f87171;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .78rem;
+      min-width: 28px;
+      text-align: center;
+      border: 1px solid rgba(239, 68, 68, .2)
+    }
+
+    .bl {
+      display: inline-block;
+      padding: .2rem .55rem;
+      background: rgba(99, 102, 241, .15);
+      color: #818cf8;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .78rem;
+      min-width: 28px;
+      text-align: center;
+      border: 1px solid rgba(99, 102, 241, .25);
+      animation: pulse 1.5s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .ec {
+      cursor: pointer;
+      position: relative
+    }
+
+    .ec:hover {
+      background: rgba(99, 102, 241, .06)
+    }
+
+    .cell-sel {
+      background: #2d3748;
+      border: 1px solid #6366f1;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: .15rem .3rem;
+      cursor: pointer;
+      outline: none
+    }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      display: inline-block;
+      cursor: pointer;
+      transition: all .4s cubic-bezier(.4, 0, .2, 1);
+      position: relative;
+      z-index: 10
+    }
+
+    .qr-box img {
+      width: 190px;
+      height: 190px;
+      display: block;
+      transition: all .4s
+    }
+
+    .qr-box.fullscreen {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vmin;
+      height: 90vmin;
+      z-index: 10000;
+      padding: 2rem;
+      box-shadow: 0 0 100px rgba(0, 0, 0, .8)
+    }
+
+    .qr-box.fullscreen img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important
+    }
+
+    .qr-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, .85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s
+    }
+
+    .qr-backdrop.show {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .tbar {
+      height: 4px;
+      background: rgba(255, 255, 255, .08);
+      border-radius: 10px;
+      overflow: hidden
+    }
+
+    .tfill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      transition: width 1s linear
+    }
+
+    .roster-item {
+      display: flex;
+      align-items: center;
+      padding: .55rem .85rem;
+      border-radius: 8px;
+      transition: background .15s
+    }
+
+    .roster-item:hover {
+      background: rgba(255, 255, 255, .03)
+    }
+
+    .roll-tag {
+      font-weight: 700;
+      color: #818cf8;
+      min-width: 100px;
+      font-size: .8rem
+    }
+
+    .form-control,
+    .form-select {
+      background: #1e293b !important;
+      border-color: rgba(255, 255, 255, .1) !important;
+      color: #e2e8f0 !important
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, .15) !important
+    }
+
+    .stat-box {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 12px;
+      padding: 1rem .50rem;
+      text-align: center
+    }
+
+    .stat-val {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .bp {
+      background: rgba(34, 197, 94, .15);
+      color: #4ade80;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .75rem;
+      border: 1px solid rgba(74, 222, 128, .2)
+    }
+
+    .ba {
+      background: rgba(239, 68, 68, .15);
+      color: #f87171;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .75rem;
+      border: 1px solid rgba(248, 113, 113, .2)
+    }
+
+    .ec {
+      cursor: pointer;
+      transition: background .2s
+    }
+
+    .ec:hover {
+      background: rgba(255, 255, 255, .03) !important
+    }
+  </style>
+</head>
+
+<body>
+  <div class="qr-backdrop" id="qr-backdrop"></div>
+  <div class="d-flex h-100">
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar" class="p-0">
+      <div class="d-flex align-items-center gap-2 p-3 border-bottom sidebar-header"
+        style="border-color:rgba(255,255,255,.06)!important">
+        <div class="d-flex align-items-center justify-content-center flex-shrink-0"
+          style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:10px;font-size:1.1rem">
+          ⚡</div>
+        <div class="brand-name">
+          <div class="fw-700"
+            style="font-size:.9rem;background:linear-gradient(90deg,#c084fc,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:700">
+            FlexiDence</div>
+          <div style="font-size:.68rem;color:#64748b">Attendance System</div>
+        </div>
+      </div>
+      <div class="d-flex flex-column gap-1 p-2 flex-grow-1">
+        <a class="nav-btn active" id="nb-view" onclick="showModule('view')"><i class="bi bi-table"></i><span
+            class="nav-label">View Attendance</span></a>
+        <a class="nav-btn" id="nb-session" onclick="showModule('session')"><i class="bi bi-qr-code-scan"></i><span
+            class="nav-label">New Session</span></a>
+      </div>
+      <div class="p-2 border-top" style="border-color:rgba(255,255,255,.06)!important">
+        <button class="nav-btn w-100 border-0" style="background:none;justify-content:center" id="sb-toggle">
+          <i class="bi bi-layout-sidebar-reverse" id="sb-icon"></i><span class="nav-label ms-1">Collapse</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="d-flex flex-column flex-grow-1" style="overflow:hidden">
+
+      <!-- TOPBAR -->
+      <div class="topbar d-flex align-items-center justify-content-between">
+        <div>
+          <h6 class="mb-0 fw-semibold" id="tb-title">View Attendance</h6><small class="text-muted" id="tb-sub">Import a
+            sheet to review records</small>
+        </div>
+        <span id="sess-badge"
+          class="badge rounded-pill {% if active_session %}bg-success-subtle text-success-emphasis{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %}">
+          {% if active_session %}<i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>{{
+          active_session.course_name }}{% else %}No Active Session{% endif %}
+        </span>
+      </div>
+
+      <!-- MODULE: VIEW ATTENDANCE -->
+      <div id="mod-view" class="module active p-3 gap-3">
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+          <label class="btn btn-sm btn-primary d-flex align-items-center gap-1 mb-0">
+            <i class="bi bi-upload"></i> Import Excel
+            <input type="file" id="import-input" accept=".xlsx" style="display:none">
+          </label>
+          <button class="btn btn-sm btn-success d-flex align-items-center gap-1" onclick="exportSheet()"><i
+              class="bi bi-download"></i> Export Excel</button>
+          <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="btn-delete-sheet"
+            onclick="deleteSheet()" style="display:none"><i class="bi bi-trash"></i> Delete Sheet</button>
+          <span id="sheet-name" class="text-muted" style="font-size:.8rem"></span>
+        </div>
+        <div class="att-wrap" id="grid-wrap">
+          <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"
+            style="min-height:300px">
+            <i class="bi bi-file-earmark-spreadsheet" style="font-size:3rem;margin-bottom:1rem"></i>
+            <h6 class="text-secondary">No Sheet Loaded</h6>
+            <small>Import an .xlsx file to view and edit attendance records</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE: NEW SESSION -->
+      <div id="mod-session" class="module" style="overflow-y:auto">
+
+        <!-- PHASE A: SETUP -->
+        <div id="phase-setup" class="p-3">
+          <div class="row justify-content-center mt-3">
+            <div class="col-md-6 col-lg-5">
+              <div class="card-dark p-4">
+                <h5 class="fw-bold mb-4"><i class="bi bi-play-circle me-2 text-primary"></i>Start New Session</h5>
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold text-secondary">COURSE</label>
+                  <select class="form-select" id="course-select">
+                    <option value="" disabled selected>Select a course…</option>
+                    <option value="__new__">＋ Add New Course</option>
+                  </select>
+                  <div id="new-course-wrap" class="input-group mt-2" style="display:none">
+                    <input type="text" class="form-control" id="new-course-input" placeholder="Course name…">
+                    <button type="button" class="btn btn-primary" onclick="saveCourse()">Add</button>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold text-secondary">QR REFRESH (seconds)</label>
+                  <select class="form-select" id="mode-select">
+                    <option value="30">Strict — 30s</option>
+                    <option value="45">Normal — 45s</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                  <input type="number" class="form-control mt-2" id="custom-dur" placeholder="Enter seconds (min 5)"
+                    min="5" style="display:none">
+                </div>
+                <button class="btn btn-primary w-100 py-2 fw-semibold" id="start-btn" onclick="startSession()"
+                  title="{% if not excel_loaded %}Upload a sheet first{% endif %}">
+                  <i class="bi bi-lightning-charge me-1"></i>Start Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE B: ACTIVE -->
+        <div id="phase-active" style="display:none;padding:1rem;gap:1rem;overflow:hidden;height:calc(100vh - 57px)">
+          <div class="d-flex flex-column gap-3" style="width:300px;min-width:300px;overflow-y:auto;overflow-x:hidden">
+            <div class="card-dark p-3 text-center">
+              <div class="qr-box mb-2 mx-auto" id="qr-box-wrap">
+                <img id="qr-img" src="/api/qrcode" alt="QR" style="width: 100%; height: auto; max-width: 200px;">
+              </div>
+              <div class="small text-muted mb-1">Refreshes in <b id="t-text">--</b>s</div>
+              <div class="tbar mb-2">
+                <div class="tfill" id="t-fill" style="width:100%"></div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="manualRefresh()"><i
+                  class="bi bi-arrow-clockwise me-1"></i>Refresh Now</button>
+            </div>
+            <div class="card-dark p-3">
+              <label class="form-label small fw-semibold text-secondary">CHANGE TIMER (live)</label>
+              <div class="input-group input-group-sm">
+                <select class="form-select" id="live-mode">
+                  <option value="30">Strict 30s</option>
+                  <option value="45">Normal 45s</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <button type="button" class="btn btn-outline-primary" onclick="applyLiveTimer()">Apply</button>
+              </div>
+              <input type="number" id="live-custom" class="form-control form-control-sm mt-1" placeholder="seconds"
+                style="display:none" min="5">
+            </div>
+            <div class="row g-2">
+              <div class="col-4">
+                <div class="stat-box">
+                  <div class="stat-val text-success" id="s-present">0</div>
+                  <div style="font-size:.65rem;color:#64748b;text-transform:uppercase">Present</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="stat-box">
+                  <div class="stat-val text-danger" id="s-absent">--</div>
+                  <div style="font-size:.65rem;color:#64748b;text-transform:uppercase">Absent</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="stat-box">
+                  <div class="stat-val text-primary" id="s-total">--</div>
+                  <div style="font-size:.65rem;color:#64748b;text-transform:uppercase">Total</div>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="end-sess-btn" class="btn btn-danger fw-semibold w-100"
+              onclick="endSession(event)"><i class="bi bi-stop-circle me-1"></i>End Session</button>
+          </div>
+          <!-- Right: Roster -->
+          <div class="card-dark flex-grow-1 p-3 d-flex flex-column" style="overflow:hidden">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="fw-semibold" id="session-course-label">Live Roster</div>
+              <button class="btn btn-sm btn-ghost p-1" onclick="buildRoster()" title="Refresh Roster"><i
+                  class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div id="roster-wrap" style="overflow-y:auto;flex:1"></div>
+          </div>
+        </div>
+
+
+      </div><!-- end mod-session -->
+    </div><!-- end main -->
+  </div><!-- end d-flex -->
+
+  <!-- TOAST -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="toast" class="toast align-items-center border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body fw-semibold" id="toast-msg"></div><button type="button"
+          class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SESSION CONFIRMATION MODAL -->
+  <div class="modal fade" id="confirmEndModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content card-dark border-0">
+        <div class="modal-body p-4 text-center">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🛑</div>
+          <h5 class="fw-bold text-white mb-2">End Session?</h5>
+          <p class="text-muted small mb-4">Attendance will be finalized and saved to the sheet.</p>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger flex-fill fw-semibold" id="confirm-end-btn"
+              onclick="doEndSession()">End Session</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SESSION SUMMARY MODAL -->
+  <div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content card-dark border-0 shadow-lg">
+        <div class="modal-header border-bottom border-white border-opacity-10">
+          <h5 class="modal-title fw-bold text-white"><i class="bi bi-check-circle-fill text-success me-2"></i>Session
+            Complete</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <h3 class="fw-800 text-white mb-1" id="m-course">Course Name</h3>
+          <p class="text-muted small mb-4">Attendance records have been synced to your sheet.</p>
+
+          <div class="row g-3 mb-4">
+            <div class="col-4">
+              <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-20">
+                <div class="stat-val text-success" id="m-present">0</div>
+                <div class="small text-success fw-semibold opacity-75">PRESENT</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-20">
+                <div class="stat-val text-danger" id="m-absent">0</div>
+                <div class="small text-danger fw-semibold opacity-75">ABSENT</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20">
+                <div class="stat-val text-primary" id="m-total">0</div>
+                <div class="small text-primary fw-semibold opacity-75">TOTAL</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm mb-2"
+            onclick="downloadAttendance()">
+            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Download Updated Attendance (.xlsx)
+          </button>
+          <button type="button" class="btn btn-link text-muted text-decoration-none small" data-bs-dismiss="modal">Close
+            Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ── STATE ──
+    let HAS_SESSION = {{ 'true' if active_session else 'false' }};
+    const EXCEL_LOADED = {{ 'true' if excel_loaded else 'false' }};
+    let sheetData = null;
+    let pollTimer = null;
+    let sessionActive = HAS_SESSION;
+
+    // ── RELOAD WARNING ──
+    // Only warn on actual navigation, not during our own endSession flow
+    let _endingSession = false;
+    window.addEventListener('beforeunload', function (e) {
+      if (sessionActive && !_endingSession) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // ── SIDEBAR ──
+    function toggleSB(force) {
+      const s = document.getElementById('sidebar'), i = document.getElementById('sb-icon');
+      if (force === 'collapse') s.classList.add('collapsed');
+      else if (force === 'expand') s.classList.remove('collapsed');
+      else s.classList.toggle('collapsed');
+      i.className = s.classList.contains('collapsed') ? 'bi bi-layout-sidebar' : 'bi bi-layout-sidebar-reverse';
+    }
+
+    // ── MODULE SWITCH ──
+    function showModule(m) {
+      document.querySelectorAll('.module').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('mod-' + m).classList.add('active');
+      document.getElementById('nb-' + m).classList.add('active');
+      const titles = { view: 'View Attendance', session: 'New Session' };
+      const subs = { view: 'Import a sheet to review and edit records', session: 'Configure and launch a live QR session' };
+      document.getElementById('tb-title').textContent = titles[m];
+      document.getElementById('tb-sub').textContent = subs[m];
+    }
+
+    function showPhase(p) {
+      document.getElementById('phase-setup').style.display = p === 'setup' ? 'block' : 'none';
+      document.getElementById('phase-active').style.display = p === 'active' ? 'flex' : 'none';
+    }
+
+    // ── TOAST ──
+    function showToast(msg, type = 'success') {
+      const el = document.getElementById('toast'), mb = document.getElementById('toast-msg');
+      el.className = 'toast align-items-center border-0 text-bg-' + (type === 'error' ? 'danger' : type === 'warn' ? 'warning' : 'success');
+      mb.textContent = msg;
+      bootstrap.Toast.getOrCreateInstance(el, { delay: 2500 }).show();
+    }
+
+    // ── IMPORT EXCEL ──
+    document.getElementById('import-input').addEventListener('change', function () {
+      if (!this.files.length) return;
+      const f = this.files[0], fd = new FormData();
+      fd.append('file', f);
+      document.getElementById('sheet-name').textContent = 'Loading…';
+      fetch('/upload_excel', { method: 'POST', body: fd })
+        .then(() => loadPreview())
+        .catch(() => showToast('Upload failed', 'error'));
+    });
+
+    function loadPreview() {
+      fetch('/api/preview_excel')
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) {
+            console.log("No sheet cached or error:", data.error);
+            document.getElementById('sheet-name').textContent = 'Error loading sheet';
+            showToast(data.error, 'error');
+            return;
+          }
+          sheetData = data;
+          document.getElementById('sheet-name').textContent = data.students.length + ' students · ' + data.date_cols.length + ' sessions';
+          renderGrid(data);
+
+          // Enable the start button now that we have data
+          const startBtn = document.getElementById('start-btn');
+          if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.title = "";
+          }
+          const delBtn = document.getElementById('btn-delete-sheet');
+          if (delBtn) delBtn.style.display = 'flex';
+        })
+        .catch(err => {
+          console.log("Preview fetch failed:", err);
+          document.getElementById('sheet-name').textContent = 'Fetch failed';
+          showToast('Failed to load preview', 'error');
+        });
+    }
+
+    function deleteSheet() {
+      if (!confirm('Are you sure you want to delete the imported sheet? This will clear the current attendance records.')) return;
+      fetch('/api/delete_sheet', { method: 'POST' }).then(r => r.json()).then(d => {
+        showToast('Sheet deleted', 'success');
+        window.location.reload(); // Simplest way to reset everything
+      });
+    }
+
+    function cellHTML(v, roll, col) {
+      const vt = (v || '-').trim();
+      if (vt === 'P') return `<span class="bp">P</span>`;
+      if (vt === 'A') return `<span class="ba">A</span>`;
+      return `<span style="color:#64748b">${vt}</span>`;
+    }
+
+    function renderGrid(data) {
+      let h = `<table class="att-table"><thead><tr>`;
+      if (data.s_no_col) h += `<th class="sc0">S#</th>`;
+      h += `<th class="sc">Roll No.</th><th class="sc2">Name</th>`;
+      data.date_cols.forEach(c => {
+        const displayC = c.startsWith("'") ? c.substring(1) : c;
+        h += `<th>${displayC}</th>`;
+      });
+      h += `</tr></thead><tbody id="att-body">`;
+      data.students.forEach(s => {
+        h += `<tr>`;
+        if (data.s_no_col) h += `<td class="sc0">${s.s_no}</td>`;
+        h += `<td class="sc">${s.roll}</td><td class="sc2">${s.name}</td>`;
+        data.date_cols.forEach(c => {
+          const v = (s.attendance[c] || '-').trim();
+          h += `<td class="ec" data-roll="${s.roll}" data-col="${c}" data-val="${v}">${cellHTML(v)}</td>`;
+        });
+        h += `</tr>`;
+      });
+      h += `</tbody></table>`;
+      const w = document.getElementById('grid-wrap');
+      w.innerHTML = h;
+
+      // EVENT DELEGATION: Single listener for all grid interactions
+      const body = document.getElementById('att-body');
+      if (body) {
+        body.onclick = (e) => {
+          const td = e.target.closest('.ec');
+          if (td) editCell(td);
+        };
+      }
+    }
+
+    function editCell(td) {
+      if (td.querySelector('select')) return;
+      const cur = td.dataset.val || '-';
+      const sel = document.createElement('select');
+      sel.className = 'cell-sel';
+      ['P', 'A', '-'].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; if (v === cur) o.selected = true; sel.appendChild(o); });
+      td.innerHTML = ''; td.appendChild(sel); sel.focus();
+
+      let saved = false;
+      const save = () => {
+        if (saved) return;
+        const nv = sel.value;
+        if (nv === cur) { // No change, just restore
+          td.innerHTML = cellHTML(cur);
+          saved = true; return;
+        }
+        saved = true;
+        td.dataset.val = nv; td.innerHTML = cellHTML(nv);
+        fetch('/api/edit_cell', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roll: td.dataset.roll, date_col: td.dataset.col, value: nv })
+        })
+          .then(r => r.json()).then(d => d.error ? showToast(d.error, 'error') : showToast('Saved', 'success'));
+      };
+      sel.addEventListener('change', save);
+      sel.addEventListener('blur', () => { setTimeout(save, 100); }); // Delay blur to allow click/change to win
+    }
+
+    function exportSheet() {
+      window.location.href = '/api/export_attendance.xlsx';
+    }
+
+
+    // ── DOWNLOAD ATTENDANCE ──
+    function downloadAttendance() {
+      window.location.href = '/api/export_attendance.xlsx';
+    }
+
+    document.getElementById('mode-select').addEventListener('change', function () {
+      document.getElementById('custom-dur').style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+    document.getElementById('live-mode').addEventListener('change', function () {
+      document.getElementById('live-custom').style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+
+    // ── COURSES ──
+    function loadCourses() {
+      return fetch('/api/courses').then(r => r.json()).then(list => {
+        const sel = document.getElementById('course-select');
+        if (!sel) return;
+        sel.innerHTML = '<option value="" disabled selected>Select a course…</option>';
+        list.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c; sel.appendChild(o);
+        });
+        const add = document.createElement('option');
+        add.value = '__new__'; add.textContent = '＋ Add New Course'; sel.appendChild(add);
+      });
+    }
+
+    const courseSel = document.getElementById('course-select');
+    if (courseSel) {
+      courseSel.addEventListener('change', function () {
+        const wrap = document.getElementById('new-course-wrap');
+        wrap.style.display = this.value === '__new__' ? 'flex' : 'none';
+        if (this.value === '__new__') {
+          const inp = document.getElementById('new-course-input');
+          inp.focus();
+          if (!inp.getAttribute('data-has-listener')) {
+            inp.addEventListener('keyup', (e) => { if (e.key === 'Enter') saveCourse(); });
+            inp.setAttribute('data-has-listener', 'true');
+          }
+        }
+      });
+    }
+
+    function saveCourse() {
+      const inp = document.getElementById('new-course-input');
+      const n = inp.value.trim();
+      if (!n) return;
+      fetch('/api/courses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) })
+        .then(r => r.json()).then(() => {
+          loadCourses().then(() => {
+            const s = document.getElementById('course-select');
+            s.value = n;
+            document.getElementById('new-course-wrap').style.display = 'none';
+            inp.value = '';
+            showToast('Course added: ' + n);
+          });
+        });
+    }
+
+    // ── START SESSION ──
+    function startSession() {
+      if (!sheetData) {
+        showToast('Please upload an .xlsx file first to start the session', 'warn');
+        return;
+      }
+      const startBtn = document.getElementById('start-btn');
+      const sel = document.getElementById('course-select');
+      const cn = sel.value === '__new__' ? document.getElementById('new-course-input').value.trim() : sel.value;
+      if (!cn) { showToast('Select or enter a course', 'warn'); return; }
+      const mode = document.getElementById('mode-select').value;
+      let dur = mode === 'custom' ? parseInt(document.getElementById('custom-dur').value || 30) : parseInt(mode);
+
+      startBtn.disabled = true;
+      startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Starting…';
+
+      const fd = new FormData();
+      fd.append('course_name', cn);
+      fd.append('mode', mode);
+      fd.append('custom_time', dur);
+
+      fetch('/start_with_excel', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+          if (d.status !== 'ok') {
+            showToast(d.message || 'Failed to start session', 'error');
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="bi bi-lightning-charge me-1"></i>Start Session';
+            return;
+          }
+          HAS_SESSION = true;
+          sessionActive = true;
+          showModule('session');
+          showPhase('active');
+          updateSessionBadge(cn, true);
+          buildRoster();
+          startPoll();
+          showToast('🚀 Session started!', 'success');
+        })
+        .catch(err => {
+          showToast('Failed to start session: ' + err.message, 'error');
+          startBtn.disabled = false;
+          startBtn.innerHTML = '<i class="bi bi-lightning-charge me-1"></i>Start Session';
+        });
+    }
+
+    function buildRoster() {
+      const wrap = document.getElementById('roster-wrap');
+      if (!wrap) return;
+      wrap.innerHTML = '<p class="text-muted text-center p-3">Loading students…</p>';
+
+      fetch('/api/attendance').then(r => r.json()).then(present => {
+        const rolls = new Set(present.map(p => (p.roll_number || '').toUpperCase().trim()));
+        fetch('/api/preview_excel').then(r => r.json()).then(data => {
+          if (data.error) {
+            wrap.innerHTML = `<p class="text-danger text-center p-3">⚠️ ${data.error}</p>`;
+            return;
+          }
+          let h = '';
+          data.students.forEach(s => {
+            const rollUpper = (s.roll || '').toUpperCase().trim();
+            const p = rolls.has(rollUpper);
+            h += `<div class="roster-item" id="r-${rollUpper}">
+          <span class="roll-tag">${rollUpper}</span>
+          <span class="flex-grow-1 small">${s.name}</span>
+          <span class="roster-status" id="rs-${rollUpper}">${p ? '<span class="bp">P</span>' : '<button class="btn btn-sm btn-outline-danger py-0 px-1 fw-bold" onclick="markManually(\'' + rollUpper + '\')" title="Mark Present">—</button>'}</span>
+        </div>`;
+          });
+          wrap.innerHTML = h;
+
+          const sTotal = document.getElementById('s-total');
+          if (sTotal) sTotal.textContent = data.students.length;
+          document.getElementById('session-course-label').textContent = 'Live Roster — ' + data.students.length + ' Students';
+        }).catch(err => {
+          wrap.innerHTML = '<p class="text-danger text-center p-3">⚠️ Failed to load student list.</p>';
+          console.error(err);
+        });
+      });
+    }
+
+    function markManually(roll) {
+      fetch('/api/mark_manually', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roll: roll }) })
+        .then(r => r.json()).then(d => {
+          if (d.status === 'ok') {
+            showToast('Marked ' + roll + ' as present');
+            const el = document.getElementById('rs-' + roll);
+            if (el) el.innerHTML = '<span class="bp">P</span>';
+          } else {
+            showToast(d.error || 'Failed to mark', 'error');
+          }
+        });
+    }
+
+    // ── LIVE POLL ──
+    function startPoll() {
+      stopPoll();
+
+      // Load QR
+      const img = document.getElementById('qr-img');
+      const box = document.getElementById('qr-box-wrap');
+      if (img) img.src = '/api/qrcode?t=' + Date.now();
+      if (box) box.style.display = 'inline-block';
+
+      // Poll every second
+      pollTimer = setInterval(() => {
+        // Timer
+        fetch('/api/token_status')
+          .then(r => r.json())
+          .then(d => {
+            const tText = document.getElementById('t-text');
+            const tFill = document.getElementById('t-fill');
+            if (tText) tText.textContent = d.seconds_remaining || 0;
+            if (tFill && d.total_duration)
+              tFill.style.width = ((d.seconds_remaining || 0) / d.total_duration * 100) + '%';
+            if (d.seconds_remaining <= 0 && img)
+              img.src = '/api/qrcode?t=' + Date.now();
+          })
+          .catch(() => { });
+
+        // Attendance markers
+        fetch('/api/attendance')
+          .then(r => r.json())
+          .then(data => {
+            data.forEach(r => {
+              const roll = (r.roll_number || '').toUpperCase().trim();
+              const el = document.getElementById('rs-' + roll);
+              if (el && !el.innerHTML.includes('bp'))
+                el.innerHTML = '<span class="bp">P</span>';
+            });
+            const sPresent = document.getElementById('s-present');
+            const sTotal = document.getElementById('s-total');
+            const sAbsent = document.getElementById('s-absent');
+            if (sPresent) sPresent.textContent = data.length;
+            const tot = parseInt(sTotal ? sTotal.textContent : '0') || 0;
+            if (tot && sAbsent) sAbsent.textContent = tot - data.length;
+          })
+          .catch(() => { });
+      }, 1000);
+    }
+
+    function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+    function manualRefresh() {
+      fetch('/api/refresh_qr', { method: 'POST' }).then(() => {
+        document.getElementById('qr-img').src = '/api/qrcode?t=' + Date.now();
+      });
+    }
+
+    function applyLiveTimer() {
+      const m = document.getElementById('live-mode').value;
+      const dur = m === 'custom' ? parseInt(document.getElementById('live-custom').value || 30) : parseInt(m);
+      fetch('/api/set_duration', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ duration: dur }) })
+        .then(r => r.json()).then(d => showToast('Timer set to ' + d.duration + 's'));
+    }
+
+    // ── END SESSION ──
+    function endSession(event) {
+      if (event) event.preventDefault();
+      const btn = document.getElementById('end-sess-btn');
+      if (btn && btn.disabled) return;
+      // Show Bootstrap confirmation modal instead of confirm()
+      const m = new bootstrap.Modal(document.getElementById('confirmEndModal'));
+      m.show();
+    }
+
+    function doEndSession() {
+      // Hide the confirm modal
+      bootstrap.Modal.getInstance(document.getElementById('confirmEndModal')).hide();
+
+      const btn = document.getElementById('end-sess-btn');
+      const confirmBtn = document.getElementById('confirm-end-btn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Ending…'; }
+      if (confirmBtn) { confirmBtn.disabled = true; }
+
+      // Stop polling and mark session as ending
+      stopPoll();
+      sessionActive = false;
+      _endingSession = true;
+
+      fetch('/end_session', { method: 'POST' })
+        .then(r => {
+          if (!r.ok) throw new Error('Server error: ' + r.status);
+          return r.json();
+        })
+        .then(d => {
+          HAS_SESSION = false;
+          _endingSession = false;
+          updateSessionBadge('', false);
+
+          const startBtn = document.getElementById('start-btn');
+          if (startBtn) { startBtn.disabled = false; startBtn.innerHTML = '<i class="bi bi-lightning-charge me-1"></i>Start Session'; }
+
+          // Show summary modal
+          try {
+            document.getElementById('m-course').textContent = d.course_name || 'N/A';
+            document.getElementById('m-present').textContent = d.present || 0;
+            document.getElementById('m-absent').textContent = d.absent || 0;
+            document.getElementById('m-total').textContent = d.total || 0;
+            // The download button now uses a separate function, no need to set href
+            new bootstrap.Modal(document.getElementById('summaryModal')).show();
+          } catch (err) { console.error('Modal error:', err); }
+
+          showModule('view');
+          showPhase('setup');
+          loadPreview();
+          showToast('✅ Session ended successfully', 'success');
+        })
+        .catch(err => {
+          console.error('End Session Error:', err);
+          showToast('Error ending session: ' + err.message, 'error');
+          sessionActive = true;
+          _endingSession = false;
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-stop-circle me-1"></i>End Session'; }
+          if (confirmBtn) { confirmBtn.disabled = false; }
+          startPoll();
+        });
+    }
+
+    function updateSessionBadge(course, active) {
+      const b = document.getElementById('sess-badge');
+      if (active) { b.className = 'badge rounded-pill bg-success-subtle text-success-emphasis'; b.innerHTML = '<i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>' + course; }
+      else { b.className = 'badge rounded-pill bg-secondary-subtle text-secondary-emphasis'; b.textContent = 'No Active Session'; }
+    }
+
+    // ── SIDEBAR BEHAVIOR ──
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('sb-toggle');
+      if (!sidebar || !toggleBtn) return;
+
+      const isClickInside = sidebar.contains(e.target);
+      const isToggleClick = toggleBtn.contains(e.target);
+
+      if (isToggleClick) {
+        toggleSB();
+      } else if (isClickInside && sidebar.classList.contains('collapsed')) {
+        toggleSB('expand');
+      } else if (!isClickInside && !sidebar.classList.contains('collapsed')) {
+        toggleSB('collapse');
+      }
+    });
+
+    // ── INIT ──
+    loadCourses();
+    loadPreview();
+
+    if (HAS_SESSION) {
+      showModule('session');
+      showPhase('active');
+      buildRoster();
+      startPoll();
+    }
+
+    // When teacher clicks New Session tab while session is live
+    document.getElementById('nb-session').addEventListener('click', () => {
+      if (HAS_SESSION) {
+        showPhase('active');
+        if (!document.getElementById('roster-wrap').children.length) buildRoster();
+        if (!pollTimer) startPoll();
+      }
+    });
+    // ── QR FULLSCREEN ──
+    const qrBox = document.getElementById('qr-box-wrap');
+    const qrBackdrop = document.getElementById('qr-backdrop');
+    if (qrBox && qrBackdrop) {
+      qrBox.addEventListener('click', () => {
+        qrBox.classList.toggle('fullscreen');
+        qrBackdrop.classList.toggle('show');
+      });
+      qrBackdrop.addEventListener('click', () => {
+        qrBox.classList.remove('fullscreen');
+        qrBackdrop.classList.remove('show');
+      });
+    }
+  </script>
+</body>
+
+</html>

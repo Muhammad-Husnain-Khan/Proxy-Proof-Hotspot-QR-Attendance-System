@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Summary - Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Session Summary</h1>
+        <p>{{ course_name }}</p>
+
+        <div style="display: flex; justify-content: space-around; margin: 2rem 0;">
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--success);">{{ present }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">PRESENT</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--error);">{{ absent }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">ABSENT</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-color);">{{ total }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">TOTAL</div>
+            </div>
+        </div>
+
+        {% if download_url %}
+            <a href="{{ download_url }}" class="btn" style="text-decoration: none; display: block; margin-bottom: 1rem; background: var(--success);">
+                📥 Download Updated Excel Sheet
+            </a>
+        {% endif %}
+
+        <a href="/" class="btn" style="text-decoration: none; display: block; background: rgba(255,255,255,0.1);">
+            Back to Home
+        </a>
+    </div>
+</body>
+</html>
