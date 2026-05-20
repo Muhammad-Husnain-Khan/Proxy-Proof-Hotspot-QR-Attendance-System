@@ -17,7 +17,7 @@ Standard QR code systems are prone to cheating: one student scans the code, scre
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          ANTI-PROXY TRIFECTA                            │
 ├───────────────────┬───────────────────────────────┬─────────────────────┤
-│ 📶 Proximity      │ ⏱️ Temporal                    │ 📱 Hardware         │
+│ 📶 Proximity      │ ⏱️ Temporal                  │   📱 Hardware       │
 │ Local Wi-Fi       │ Dynamic expiring tokens       │ MAC Address locking │
 │ (No Hotspot =     │ (QR regenerates every 30s;    │ (1 device =         │
 │  No Webpage)      │  screenshots expire instantly)│  1 attendance mark) │
@@ -154,7 +154,7 @@ My QR-hotspot hybrid system/
 *Developed with ❤️ as a secure, fast, and administrative solution for classrooms, offices and workspaces*
 
 _**This Project was developed as an academic project under the Software Requirement Engineering at FAST-NUCES Lahore.**_
-**Developed By**:
-   Muhammad-Husnain-Khan
-   Muazzam-Mahmood 
-   rai-umais
+**Developed By**:   
+   **Muhammad-Husnain-Khan   
+   Muazzam-Mahmood    
+   rai-umais**   
