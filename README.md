@@ -151,4 +151,10 @@ My QR-hotspot hybrid system/
 
 ---
 
-*Developed with ❤️ as a secure, fast, and administrative solution for classrooms.*
+*Developed with ❤️ as a secure, fast, and administrative solution for classrooms, offices and workspaces*
+
+_**This Project was developed as an academic project under the Software Requirement Engineering at FAST-NUCES Lahore.**_
+**Developed By**:
+   Muhammad-Husnain-Khan
+   Muazzam-Mahmood 
+   rai-umais
